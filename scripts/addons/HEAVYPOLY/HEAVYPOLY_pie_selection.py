@@ -58,8 +58,10 @@ class HP_MT_pie_select(Menu):
         else:
             pie.operator("object.mode_set", text="Object", icon='MESH_CUBE').mode = 'OBJECT'
         # top
+        obj = bpy.context.object
+        obj_type = obj.type if obj else None
 
-        match bpy.context.object.type:
+        match obj_type:
             case "GPENCIL":
                 pie.operator('object.mode_set', text = 'GP Edit', icon='EDITMODE_HLT').mode='EDIT_GPENCIL'
             case "GREASEPENCIL":
@@ -74,7 +76,7 @@ class HP_MT_pie_select(Menu):
                 pie.operator("object.selectmodesmart", text="Edge", icon='NONE').selectmode='EDGE'
 
         # topleft
-        match bpy.context.object.type:
+        match obj_type:
             case "GPENCIL":
                 pie.operator('object.mode_set', text = 'GP Draw', icon='GREASEPENCIL').mode='PAINT_GPENCIL'
             case "GREASEPENCIL":
@@ -92,7 +94,7 @@ class HP_MT_pie_select(Menu):
                 pie.operator("object.selectmodesmart", text="Vert", icon='NONE').selectmode='VERT'
 
         # topright
-        match bpy.context.object.type:
+        match obj_type:
             case "GPENCIL":
                 pie.operator('object.mode_set', text = "GP Sculpt", icon="SCULPTMODE_HLT").mode="SCULPT_GPENCIL"
             case "GREASEPENCIL":
@@ -205,13 +207,15 @@ class HP_OT_SelectModeSmart(bpy.types.Operator):
 
         match bpy.context.mode:
             case "OBJECT":
+                if bpy.context.object is None:
+                    return {'CANCELLED'}
                 match bpy.context.object.type:
                     case "MESH":
                         bpy.ops.object.mode_set(mode='EDIT')
                         select(self.selectmode)
                     case "GPENCIL":
                         bpy.ops.object.mode_set(mode='GPENCIL_PAINT')
-                    case "GPENCIL":
+                    case "GREASEPENCIL":
                         bpy.ops.object.mode_set(mode='PAINT_GREASE_PENCIL')
                     case "CURVE" | "FONT":
                         bpy.ops.object.mode_set(mode='EDIT')

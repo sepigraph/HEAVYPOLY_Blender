@@ -61,24 +61,18 @@ class HP_MT_popup_uber(bpy.types.Menu):
                         sub = col.column(align=True)
                         sub.prop(ccam, "longitude_min", text="Longiture Min")
                         sub.prop(ccam, "longitude_max", text="Max")
-                elif engine in {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_OPENGL'}:
+                elif engine in {'BLENDER_EEVEE', 'BLENDER_EEVEE_NEXT'}:
                     col.prop(camdat, "lens")
+            dof = camdat.dof
             row = col.row()
-            row.prop(camdat, "dof_distance", text="Focus Distance")
-            row.prop(camdat, "dof_object", text="")
-
-            dof_options = camdat.gpu_dof        
-            if context.engine == 'BLENDER_EEVEE':
-                row = col.row(align = True)
-                row.prop(dof_options, "fstop")
-                row.prop(dof_options, "blades")
-                row = col.row(align = True)
-                row.prop(dof_options, "rotation")
-                row.prop(dof_options, "ratio")
-            else:
-                col.label(text="Viewport")
-                col.prop(dof_options, "fstop")
-                col.prop(dof_options, "blades")
+            row.prop(dof, "focus_distance", text="Focus Distance")
+            row.prop(dof, "focus_object", text="")
+            row = col.row(align=True)
+            row.prop(dof, "aperture_fstop", text="F-Stop")
+            row.prop(dof, "aperture_blades", text="Blades")
+            row = col.row(align=True)
+            row.prop(dof, "aperture_rotation", text="Rotation")
+            row.prop(dof, "aperture_ratio", text="Ratio")
             #SECOND COLUMN##############################################################
             
 

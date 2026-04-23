@@ -3,7 +3,7 @@ bl_info = {
     "description": "Operators that make for smooth blending",
     "author": "Vaughan Ling",
     "version": (0, 1, 0),
-    "blender": (4, 0, 0),
+    "blender": (5, 1, 0),
     "location": "",
     "warning": "",
     "wiki_url": "",
@@ -16,6 +16,11 @@ from bpy.types import Menu
 from bpy.types import Operator
 from bpy.props import BoolProperty
 from mathutils import Color
+
+
+def _get_prefs():
+    addon = bpy.context.preferences.addons.get(__package__ or '')
+    return addon.preferences if addon else None
 
 class HP_OT_unhide(bpy.types.Operator):
     bl_idname = "mesh.hp_unhide"         # unique identifier for buttons and menu items to reference.
@@ -66,7 +71,8 @@ class HP_OT_smart_snap_cursor(bpy.types.Operator):
         try:
             if context.active_object.mode == 'EDIT':
                 if context.active_object.type == 'MESH':
-                    if  context.object.data.total_vert_sel == 0:
+                    bm = bmesh.from_edit_mesh(context.object.data)
+                    if not any(v.select for v in bm.verts):
                         bpy.ops.view3d.snap_cursor_to_center()
                     else:
                         bpy.ops.view3d.snap_cursor_to_selected()
@@ -90,7 +96,8 @@ class HP_OT_smart_snap_origin_collection(bpy.types.Operator):
         try:
             if context.active_object.mode == 'EDIT':
                 if context.active_object.type == 'MESH':
-                    if  context.object.data.total_vert_sel == 0:
+                    bm = bmesh.from_edit_mesh(context.object.data)
+                    if not any(v.select for v in bm.verts):
                         bpy.ops.view3d.snap_cursor_to_center()
                         bpy.ops.object.mode_set(mode='OBJECT')
                         bpy.ops.object.origin_set(type = 'ORIGIN_CURSOR')
@@ -128,7 +135,8 @@ class HP_OT_smart_snap_origin(bpy.types.Operator):
         try:
             if context.active_object.mode == 'EDIT':
                 if context.active_object.type == 'MESH':
-                    if  context.object.data.total_vert_sel == 0:
+                    bm = bmesh.from_edit_mesh(context.object.data)
+                    if not any(v.select for v in bm.verts):
                         bpy.ops.view3d.snap_cursor_to_center()
                         bpy.ops.object.mode_set(mode='OBJECT')
                         bpy.ops.object.origin_set(type = 'ORIGIN_CURSOR')
@@ -206,9 +214,10 @@ class HP_OT_extrude(Operator):
             return {'FINISHED'}
 
         mesh = context.object.data
-        selface = mesh.total_face_sel
-        seledge = mesh.total_edge_sel
-        selvert = mesh.total_vert_sel
+        bm = bmesh.from_edit_mesh(mesh)
+        selvert = sum(1 for v in bm.verts if v.select)
+        seledge = sum(1 for e in bm.edges if e.select)
+        selface = sum(1 for f in bm.faces if f.select)
 
         if selvert == 0:
             bpy.ops.mesh.select_mode(type='VERT')
@@ -223,7 +232,8 @@ class HP_OT_extrude(Operator):
 
         bpy.ops.mesh.extrude_region_move('EXEC_DEFAULT')
 
-        if mesh.total_face_sel != selface:
+        bm = bmesh.from_edit_mesh(mesh)
+        if sum(1 for f in bm.faces if f.select) != selface:
             bpy.ops.transform.shrink_fatten('INVOKE_DEFAULT', use_even_offset=True)
             return {'FINISHED'}
 
@@ -255,13 +265,11 @@ class HP_OT_SmartScale(Operator):
         bpy.ops.transform.resize('INVOKE_DEFAULT', mirror=True)
         return {'RUNNING_MODAL'}
     def modal(self, context, event):
-        print("MODAL " + event.type)
         if event.type == 'MOUSEMOVE':
-            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+            prefs = _get_prefs()
+            if prefs is None or prefs.smart_scale_apply:
+                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
             return {'FINISHED'}
-        # if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
-        #     print('Applying Scale')
-        #     return {'FINISHED'}
         elif event.type in {'RIGHTMOUSE', 'ESC'}:
             return {'CANCELLED'}
         else:
@@ -303,7 +311,7 @@ class HP_OT_SmartBevel(bpy.types.Operator):
                     if len(sel) == 0:
                         bpy.ops.mesh.select_all(action='SELECT')
                 bpy.ops.mesh.bevel('INVOKE_DEFAULT', clamp_overlap=True, miter_outer='ARC')
-            bpy.ops.mesh.remove_doubles()
+            bpy.ops.mesh.merge_by_distance()
 
         return {'FINISHED'}
 
@@ -356,17 +364,15 @@ class HP_OT_SmartShadeSmooth(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
 
     def invoke(self, context, event):
-        isedit = False
-        for ob in bpy.context.selected_objects:
-            if ob.type == 'MESH':
-                if ob.mode == 'EDIT':
-                    isedit = True
-                    bpy.ops.object.editmode_toggle()
-                bpy.ops.object.shade_smooth()
-                ob.data.use_auto_smooth = True
-                ob.data.auto_smooth_angle = 0.436332
-                if isedit:
-                    bpy.ops.object.editmode_toggle()
+        isedit = any(
+            ob.type == 'MESH' and ob.mode == 'EDIT'
+            for ob in bpy.context.selected_objects
+        )
+        if isedit:
+            bpy.ops.object.editmode_toggle()
+        bpy.ops.object.shade_smooth_by_angle(angle=0.436332)
+        if isedit:
+            bpy.ops.object.editmode_toggle()
         return {'FINISHED'}
 
 class HP_OT_toggle_render_material(bpy.types.Operator):
@@ -375,10 +381,11 @@ class HP_OT_toggle_render_material(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
 
     def invoke(self, context, event):
-        if bpy.context.space_data.viewport_shade != 'MATERIAL':
-            bpy.context.space_data.viewport_shade = 'MATERIAL'
-        elif bpy.context.space_data.viewport_shade == 'MATERIAL':
-            bpy.context.space_data.viewport_shade = 'RENDERED'
+        shading = bpy.context.space_data.shading
+        if shading.type != 'MATERIAL':
+            shading.type = 'MATERIAL'
+        else:
+            shading.type = 'RENDERED'
         return {'FINISHED'}
 
 
@@ -626,12 +633,53 @@ class OBJECT_OT_select_camera_hidden(bpy.types.Operator):
 
 
 
+class HP_OT_CleanUnusedMaterialSlots(bpy.types.Operator):
+    bl_idname = "object.hp_clean_unused_material_slots"
+    bl_label = "Clean Unused Material Slots"
+    bl_description = "Remove material slots not assigned to any faces on selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        total = 0
+        prev_active = context.view_layer.objects.active
+        for obj in context.selected_objects:
+            if obj.type not in {'MESH', 'CURVE', 'SURFACE', 'META', 'FONT'}:
+                continue
+            context.view_layer.objects.active = obj
+            before = len(obj.material_slots)
+            bpy.ops.object.material_slot_remove_unused()
+            total += before - len(obj.material_slots)
+        context.view_layer.objects.active = prev_active
+        self.report({'INFO'}, f"Removed {total} unused material slot(s)")
+        return {'FINISHED'}
+
+
+class HP_OT_RemoveAllMaterials(bpy.types.Operator):
+    bl_idname = "object.hp_remove_all_materials"
+    bl_label = "Remove All Materials"
+    bl_description = "Remove all material slots from selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        total = 0
+        for obj in context.selected_objects:
+            if not hasattr(obj.data, 'materials'):
+                continue
+            total += len(obj.material_slots)
+            obj.data.materials.clear()
+        self.report({'INFO'}, f"Removed {total} material slot(s)")
+        return {'FINISHED'}
+
+
 def draw_func(self, context):
     layout = self.layout
     layout.separator()
     layout.operator("object.set_camera_off_wire", icon='HIDE_ON')
     layout.operator("object.set_camera_on_textured", icon='HIDE_OFF')
     layout.operator("object.select_camera_hidden", icon='RESTRICT_VIEW_ON')
+    layout.separator()
+    layout.operator("object.hp_clean_unused_material_slots", icon='MATERIAL')
+    layout.operator("object.hp_remove_all_materials", icon='X')
 
 
 classes = (
@@ -657,19 +705,26 @@ classes = (
     OBJECT_OT_set_camera_off_wire,
     OBJECT_OT_set_camera_on_textured,
     OBJECT_OT_select_camera_hidden,
+    HP_OT_CleanUnusedMaterialSlots,
+    HP_OT_RemoveAllMaterials,
 
 )
 #register, unregister = bpy.utils.register_classes_factory(classes)
 
+def _append_draw_func():
+    if hasattr(bpy.types, 'VIEW3D_MT_object_context_menu'):
+        bpy.types.VIEW3D_MT_object_context_menu.append(draw_func)
+
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-    bpy.types.VIEW3D_MT_object_context_menu.append(draw_func)
+    bpy.app.timers.register(_append_draw_func, first_interval=0.0)
 
 def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-    bpy.types.VIEW3D_MT_object_context_menu.remove(draw_func)
+    if hasattr(bpy.types, 'VIEW3D_MT_object_context_menu'):
+        bpy.types.VIEW3D_MT_object_context_menu.remove(draw_func)
 
 if __name__ == "__main__":
     register()

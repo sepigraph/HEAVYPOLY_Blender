@@ -2,10 +2,9 @@ bl_info = {
     "name": "HP Draw Primitives",
     "author": "Vaughan Ling",
     "version": (0, 1, 0),
-    "blender": (2, 80, 0),
+    "blender": (5, 1, 0),
     }
 import bpy
-import bgl
 import blf
 import bmesh
 import time
@@ -34,7 +33,7 @@ def draw_callback_px(self, context):
         'SHIFT     | Extrude',
         ]
         
-    blf.size(font_id, 20, 42)
+    blf.size(font_id, 20)
     for l in lines:
         blf.position(font_id, 30, (y + y_offset), 0)
         blf.color(font_id,.02,.02,.02,1)
@@ -43,9 +42,9 @@ def draw_callback_px(self, context):
     # if self.dragging:
         # if self.shape == 'circle':
             # blf.position(font_id, 300, 30, 0)
-            # blf.draw(font_id, 'A / D = Resolution = ' + str(self.res*100) + '%')    
+            # blf.draw(font_id, 'A / D = Resolution = ' + str(self.res*100) + '%')
 
-    blf.size(font_id, 20, 72)
+    blf.size(font_id, 20)
     blf.position(font_id, 30, y_offset + 60, 0)
     blf.draw(font_id, 'DRAG  | Draw')
 # class VIEW3D_PT_hp_draw(bpy.types.Panel):

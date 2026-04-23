@@ -184,8 +184,8 @@ class HP_OT_add_primitive(Operator):
                 bpy.ops.mesh.primitive_uv_sphere_add(align=align_mode)
 
             elif t == 'Grease_Pencil':
-                bpy.ops.object.gpencil_add()
-                bpy.ops.object.mode_set(mode='GPENCIL_PAINT')
+                bpy.ops.object.grease_pencil_add(type='EMPTY')
+                bpy.ops.object.mode_set(mode='PAINT_GREASE_PENCIL')
             elif t == 'Curve':
                 bpy.ops.curve.primitive_nurbs_path_add()
                 bpy.ops.object.editmode_toggle()
@@ -195,9 +195,7 @@ class HP_OT_add_primitive(Operator):
                 bpy.ops.object.light_add(type='POINT', radius=.05, align=align_mode)
                 context.active_object.name = 'Light Point'
                 context.object.data.energy = 200
-                context.object.data.shadow_soft_size = 0.3
-                context.object.data.shadow_buffer_bias = 0.1
-                context.object.data.shadow_buffer_clip_start = 0.1
+                context.object.data.shadow_radius = 0.3
 
             elif t == 'Area_Light':
                 bpy.ops.object.mode_set(mode='OBJECT')
@@ -207,9 +205,6 @@ class HP_OT_add_primitive(Operator):
                 context.active_object.data.size = 1
                 context.active_object.data.size_y = 3
                 context.active_object.data.energy = 200
-                context.active_object.data.shadow_soft_size = 0.3
-                context.active_object.data.shadow_buffer_bias = 0.1
-                context.active_object.data.shadow_buffer_clip_start = 0.1
 
         # Save current transform orientation
         t_axis = context.scene.transform_orientation_slots[0].type
@@ -246,7 +241,12 @@ class HP_OT_add_primitive(Operator):
             addob = True
 
         # If no selection at all
-        if context.object and context.object.type == 'MESH' and context.object.data.total_vert_sel == 0:
+        in_edit = context.mode == 'EDIT_MESH'
+        no_verts_selected = (
+            in_edit and context.object and context.object.type == 'MESH' and
+            not any(v.select for v in bmesh.from_edit_mesh(context.object.data).verts)
+        )
+        if not in_edit or no_verts_selected:
             prim()
 
         # Face select mode

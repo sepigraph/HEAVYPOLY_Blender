@@ -87,7 +87,7 @@ class HP_PT_object_properties(bpy.types.Panel):
                         sub = col.column(align=True)
                         sub.prop(ccam, "longitude_min", text="Longiture Min")
                         sub.prop(ccam, "longitude_max", text="Max")
-                elif engine in {'BLENDER_RENDER', 'BLENDER_EEVEE', 'BLENDER_OPENGL'}:
+                elif engine in {'BLENDER_EEVEE', 'BLENDER_EEVEE_NEXT'}:
                     col.prop(camdat, "lens")
             row = col.row()
 
@@ -449,16 +449,16 @@ class HP_PT_object_properties(bpy.types.Panel):
                 col.prop(world, "color")
             scene = bpy.context.scene
             props = scene.eevee
-            box = col.box().column()
-            
-            box.active = props.use_bloom
-            box.label(text = 'Bloom')
-            box.prop(props, "bloom_threshold")
-            box.prop(props, "bloom_knee")
-            box.prop(props, "bloom_radius")
-            box.prop(props, "bloom_color")
-            box.prop(props, "bloom_intensity")
-            box.prop(props, "bloom_clamp")
+            if hasattr(props, 'use_bloom'):
+                box = col.box().column()
+                box.active = props.use_bloom
+                box.label(text = 'Bloom')
+                box.prop(props, "bloom_threshold")
+                box.prop(props, "bloom_knee")
+                box.prop(props, "bloom_radius")
+                box.prop(props, "bloom_color")
+                box.prop(props, "bloom_intensity")
+                box.prop(props, "bloom_clamp")
             scene = context.scene
             rd = scene.render
             row = col2.row(align = True)

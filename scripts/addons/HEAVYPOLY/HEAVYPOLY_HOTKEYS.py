@@ -183,9 +183,6 @@ def Keymap_Heavypoly():
     kmi = km.keymap_items.new("mesh.dupli_extrude_cursor", 'E', 'PRESS')
     kmi = km.keymap_items.new("transform.edge_bevelweight", 'E', 'PRESS', ctrl=True, shift=True)
     #kmi = km.keymap_items.new('transform.translate', 'LEFTMOUSE', 'CLICK_DRAG')
-    kmi = km.keymap_items.new('view3d.select_through_border', 'LEFTMOUSE', 'CLICK_DRAG')
-    kmi = km.keymap_items.new('view3d.select_through_border_add', 'LEFTMOUSE', 'CLICK_DRAG',shift=True)
-    kmi = km.keymap_items.new('view3d.select_through_border_sub', 'LEFTMOUSE', 'CLICK_DRAG',ctrl=True)
     kmi = km.keymap_items.new("wm.call_menu_pie","A","PRESS", shift=True).properties.name="HP_MT_pie_add"
     kmi = km.keymap_items.new("wm.call_menu","W","PRESS").properties.name="VIEW3D_MT_edit_mesh_context_menu"
     kmi = km.keymap_items.new("screen.userpref_show","TAB","PRESS", ctrl=True)
@@ -310,7 +307,10 @@ def disable_specific_kmi(km=None, idname=None, type=None, value=None, shift=None
         return
     # the default keyconfig
     kc = wm.keyconfigs['Blender']
-    for kmi in kc.keymaps[km].keymap_items:
+    km_obj = kc.keymaps.get(km)
+    if km_obj is None:
+        return
+    for kmi in km_obj.keymap_items:
         if kmi.idname == idname and kmi.type == type and kmi.value == value and kmi.shift == shift and kmi.ctrl == ctrl and kmi.alt == alt:
             kmi.active = False
             print("Disabled", kmi.name)
@@ -331,6 +331,12 @@ def get_active_kmi(space: str, **kwargs) -> bpy.types.KeyMapItem:
                     break
             else:
                 return kmi
+    return None
+
+def disable_active_kmi(space: str, **kwargs):
+    kmi = get_active_kmi(space, **kwargs)
+    if kmi:
+        kmi.active = False
 
 
 
@@ -359,50 +365,39 @@ def register():
 
     disable_specific_kmi('Sculpt', 'paint.brush_select','V','PRESS',False,False,False)
     
-    disable_specific_kmi('3D View Tool: Select Box', 'view3d.select_box','LEFTMOUSE','CLICK_DRAG',False,False,False)
-    disable_specific_kmi('3D View Tool: Select Box', 'view3d.select_box','LEFTMOUSE','CLICK_DRAG',True,False,False)
-    disable_specific_kmi('3D View Tool: Select Box', 'view3d.select_box','LEFTMOUSE','CLICK_DRAG',False,True,False)
-    disable_specific_kmi('3D View Tool: Select Box', 'view3d.select_box','LEFTMOUSE','CLICK_DRAG',True,True,False)
-    
-    
-    kmi = get_active_kmi("3D View Tool: Move",
-                         idname="transform.translate",
-                         type='LEFTMOUSE',
-                         value='CLICK_DRAG',
-                         shift=False,
-                         ctrl=False,
-                         alt=False)
-    kmi.active = False
-    kmi = get_active_kmi("Pose",
-                         idname="transform.translate",
-                         type='LEFTMOUSE',
-                         value='CLICK_DRAG',
-                         shift=False,
-                         ctrl=False,
-                         alt=False)
-    kmi.active = False
-    kmi = get_active_kmi("Mesh",
-                         idname="wm.call_menu",
-                         type='X',
-                         shift=False,
-                         ctrl=False,
-                         alt=False)
-    kmi.active = False
-    kmi = get_active_kmi("Grease Pencil Edit Mode",
-                         idname="wm.call_menu",
-                         type='X',
-                         shift=False,
-                         ctrl=False,
-                         alt=False)
-    print ("Disable GP Edit X")
-    kmi.active = False
-    kmi = get_active_kmi("Frames",
-                         idname="screen.animation_play",
-                         type='SPACE',
-                         shift=True,
-                         ctrl=True,
-                         alt=False)
-    kmi.active = False
+
+    disable_active_kmi("3D View Tool: Move",
+                        idname="transform.translate",
+                        type='LEFTMOUSE',
+                        value='CLICK_DRAG',
+                        shift=False,
+                        ctrl=False,
+                        alt=False)
+    disable_active_kmi("Pose",
+                        idname="transform.translate",
+                        type='LEFTMOUSE',
+                        value='CLICK_DRAG',
+                        shift=False,
+                        ctrl=False,
+                        alt=False)
+    disable_active_kmi("Mesh",
+                        idname="wm.call_menu",
+                        type='X',
+                        shift=False,
+                        ctrl=False,
+                        alt=False)
+    disable_active_kmi("Grease Pencil Edit Mode",
+                        idname="wm.call_menu",
+                        type='X',
+                        shift=False,
+                        ctrl=False,
+                        alt=False)
+    disable_active_kmi("Frames",
+                        idname="screen.animation_play",
+                        type='SPACE',
+                        shift=True,
+                        ctrl=True,
+                        alt=False)
 
         
 
