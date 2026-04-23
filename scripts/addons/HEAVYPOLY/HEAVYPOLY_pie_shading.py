@@ -63,15 +63,12 @@ class HP_MT_pie_shading(Menu):
         #BOTTOM LEFT
         split = pie.split()
         col = split.column(align=True)
-#        row = col.row(align=True)
-#        row.scale_y=1.5
-#        row.operator("shading.bg_wire", text='BG Wire')
         row = col.row(align=True)
         row.scale_y=1.5
-        row.operator("scene.light_cache_bake", text='Bake Lighting')
+        row.operator("render.render", text='Render Image')
         row = col.row(align=True)
         row.scale_y=1.5
-        row.operator("scene.light_cache_free", text='Free Lighting')
+        row.operator("render.render", text='Render Animation').animation = True
 
         #BOTTOM RIGHT
         split = pie.split()
@@ -81,7 +78,6 @@ class HP_MT_pie_shading(Menu):
         box = col.box()
         box.prop(overlay, "show_overlays", text="OVERLAYS")
         box.prop(overlay, "show_extras", text="EXTRAS")
-        box.prop(context.scene.eevee, "use_soft_shadows", text="SOFT SHADOWS")
         # box.prop(overlay, "show_backface_culling", text="HIDE BACKFACES")
         box.prop(overlay, "show_cursor", text="3D CURSOR")
         box.operator("object.add_normal_modifier", text = 'Shade Smooth')

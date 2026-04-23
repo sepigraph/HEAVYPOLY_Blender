@@ -30,6 +30,44 @@ CONFLICT_MAP = {
 }
 
 
+# Maps preference attribute → list of addon keymap items to toggle.
+# Each entry: (km_name, idname, type, value, shift, ctrl, alt)
+HOTKEY_GROUP_MAP = {
+    'hotkey_double_click_select': [
+        ('Mesh', 'mesh.select_linked',       'LEFTMOUSE', 'DOUBLE_CLICK', False, False, False),
+        ('Mesh', 'mesh.select_linked',       'LEFTMOUSE', 'DOUBLE_CLICK', True,  False, False),
+        ('Mesh', 'mesh.edgering_select',     'LEFTMOUSE', 'DOUBLE_CLICK', False, False, True),
+        ('Mesh', 'mesh.loop_multi_select',   'LEFTMOUSE', 'DOUBLE_CLICK', True,  False, True),
+        ('Grease Pencil', 'gpencil.select_linked', 'LEFTMOUSE', 'DOUBLE_CLICK', False, False, False),
+        ('Grease Pencil', 'gpencil.select_linked', 'LEFTMOUSE', 'DOUBLE_CLICK', True,  False, False),
+        ('Curve', 'curve.select_linked',     'LEFTMOUSE', 'DOUBLE_CLICK', True,  False, False),
+        ('Curve', 'curve.select_linked_pick','LEFTMOUSE', 'DOUBLE_CLICK', False, False, False),
+    ],
+    'hotkey_scroll_select': [
+        ('Mesh', 'mesh.select_more',      'WHEELINMOUSE',  'PRESS', True,  True,  False),
+        ('Mesh', 'mesh.select_less',      'WHEELOUTMOUSE', 'PRESS', True,  True,  False),
+        ('Mesh', 'mesh.select_next_item', 'WHEELINMOUSE',  'PRESS', True,  False, False),
+        ('Mesh', 'mesh.select_prev_item', 'WHEELOUTMOUSE', 'PRESS', True,  False, False),
+    ],
+    'hotkey_alt_loop_select': [
+        ('Mesh', 'mesh.loop_select', 'LEFTMOUSE', 'PRESS', False, False, True),
+        ('Mesh', 'mesh.loop_select', 'LEFTMOUSE', 'PRESS', True,  False, True),
+    ],
+    'hotkey_space_move': [
+        ('Window', 'transform.translate', 'SPACE', 'PRESS', False, False, False),
+    ],
+    'hotkey_c_rotate': [
+        ('Window', 'transform.rotate', 'C', 'PRESS', False, False, False),
+    ],
+    'hotkey_s_scale': [
+        ('3D View', 'view3d.smart_scale', 'S', 'PRESS', False, False, False),
+    ],
+    'hotkey_d_redo': [
+        ('Window', 'screen.redo_last', 'D', 'PRESS', False, False, False),
+    ],
+}
+
+
 def get_prefs():
     addon = bpy.context.preferences.addons.get(__package__ or '')
     return addon.preferences if addon else None
@@ -88,6 +126,27 @@ def _tab_subsurf_update(self, context):
     _set_tab_subsurf_active(self.tab_subsurf)
 
 
+def _set_hotkey_group_active(group_kmis, active):
+    kc = bpy.context.window_manager.keyconfigs.addon
+    if not kc:
+        return
+    for km_name, idname, type_, value, shift, ctrl, alt in group_kmis:
+        km = kc.keymaps.get(km_name)
+        if not km:
+            continue
+        for kmi in km.keymap_items:
+            if (kmi.idname == idname and kmi.type == type_ and kmi.value == value
+                    and kmi.shift == shift and kmi.ctrl == ctrl and kmi.alt == alt):
+                kmi.active = active
+                break
+
+
+def _hotkey_group_toggle(pref_attr, group_kmis):
+    def update(self, context):
+        _set_hotkey_group_active(group_kmis, getattr(self, pref_attr))
+    return update
+
+
 class HP_AddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
@@ -119,6 +178,70 @@ class HP_AddonPreferences(bpy.types.AddonPreferences):
             "so geometry behind other faces is included"
         ),
         default=True,
+    )
+
+    # ── Panels ────────────────────────────────────────────────────────────────
+    hp_render_panel: BoolProperty(
+        name="HP Render Panel  [N-panel → HeavyPoly]",
+        description="Show the HeavyPoly Render panel in the 3D View sidebar",
+        default=True,
+    )
+
+    # ── Hotkeys ───────────────────────────────────────────────────────────────
+    hotkey_double_click_select: BoolProperty(
+        name="Double-Click Linked / Loop / Ring  [Mesh, Curve, GP]",
+        description=(
+            "LMB double-click selects linked island; "
+            "Alt+double-click selects ring; Alt+Shift+double-click selects all loops"
+        ),
+        default=True,
+        update=_hotkey_group_toggle('hotkey_double_click_select',
+                                    HOTKEY_GROUP_MAP['hotkey_double_click_select']),
+    )
+    hotkey_scroll_select: BoolProperty(
+        name="Scroll Select More / Less / Next / Prev  [Mesh]",
+        description=(
+            "Shift+Wheel = next/prev item; "
+            "Ctrl+Shift+Wheel = grow/shrink selection"
+        ),
+        default=True,
+        update=_hotkey_group_toggle('hotkey_scroll_select',
+                                    HOTKEY_GROUP_MAP['hotkey_scroll_select']),
+    )
+    hotkey_alt_loop_select: BoolProperty(
+        name="Alt-Click Loop Select  [Mesh]",
+        description="Alt+LMB selects an edge loop; Alt+Shift+LMB extends the loop selection",
+        default=True,
+        update=_hotkey_group_toggle('hotkey_alt_loop_select',
+                                    HOTKEY_GROUP_MAP['hotkey_alt_loop_select']),
+    )
+    hotkey_space_move: BoolProperty(
+        name="Space = Move  [Global]",
+        description="Spacebar triggers Move (transform.translate) in all contexts",
+        default=True,
+        update=_hotkey_group_toggle('hotkey_space_move',
+                                    HOTKEY_GROUP_MAP['hotkey_space_move']),
+    )
+    hotkey_c_rotate: BoolProperty(
+        name="C = Rotate  [Global]",
+        description="C key triggers Rotate in all contexts",
+        default=True,
+        update=_hotkey_group_toggle('hotkey_c_rotate',
+                                    HOTKEY_GROUP_MAP['hotkey_c_rotate']),
+    )
+    hotkey_s_scale: BoolProperty(
+        name="S = Smart Scale  [3D View]",
+        description="S key triggers HP Smart Scale in the 3D View",
+        default=True,
+        update=_hotkey_group_toggle('hotkey_s_scale',
+                                    HOTKEY_GROUP_MAP['hotkey_s_scale']),
+    )
+    hotkey_d_redo: BoolProperty(
+        name="D = Redo Last  [Global]",
+        description="D key opens the Adjust Last Operation panel",
+        default=True,
+        update=_hotkey_group_toggle('hotkey_d_redo',
+                                    HOTKEY_GROUP_MAP['hotkey_d_redo']),
     )
 
     # ── Pie Menus ─────────────────────────────────────────────────────────────
@@ -202,6 +325,18 @@ class HP_AddonPreferences(bpy.types.AddonPreferences):
         box.label(text="Selection", icon='RESTRICT_SELECT_OFF')
         box.prop(self, 'select_through_enabled')
 
+        # Panels
+        box = layout.box()
+        box.label(text="Panels", icon='WINDOW')
+        box.prop(self, 'hp_render_panel')
+
+        # Hotkeys
+        box = layout.box()
+        box.label(text="Hotkeys", icon='KEYINGSET')
+        flow = box.grid_flow(columns=2, even_columns=True, align=True)
+        for attr in HOTKEY_GROUP_MAP:
+            flow.prop(self, attr)
+
         # Pie Menus
         box = layout.box()
         box.label(text="Pie Menus", icon='MESH_CIRCLE')
@@ -218,6 +353,8 @@ def apply_prefs():
     for attr, menu_name in PREF_PIE_MAP.items():
         _set_pie_active(menu_name, getattr(prefs, attr), attr)
     _set_tab_subsurf_active(prefs.tab_subsurf)
+    for attr, kmis in HOTKEY_GROUP_MAP.items():
+        _set_hotkey_group_active(kmis, getattr(prefs, attr))
 
 
 def register():

@@ -101,8 +101,9 @@ class HP_OT_draw_primitives(bpy.types.Operator):
         self.delta = 0
         self.mode = 'Draw'
         self.colormode = 'sat'
-        self.hue = bpy.data.brushes["Draw"].color.h 
-        self.value = bpy.data.brushes["Draw"].color.v
+        _db = bpy.data.brushes.get("Draw")
+        self.hue = _db.color.h if _db else 0.5
+        self.value = _db.color.v if _db else 1.0
         context.window_manager.modal_handler_add(self)
         self.bvhtree = self.bvhtree_from_object(context, context.active_object)
         self.drawbox = None
@@ -326,11 +327,13 @@ class HP_OT_draw_primitives(bpy.types.Operator):
                         
                     color_delta_x = (self.mouse_path_x[-2]-self.mouse_path_x[-1])*-.001
                     color_delta_y = (self.mouse_path_y[-2]-self.mouse_path_y[-1])*-.001
-                    if self.colormode == 'sat':
-                        bpy.data.brushes["Draw"].color.s += color_delta_x
-                    if self.colormode == 'hue':
-                        bpy.data.brushes["Draw"].color.h += color_delta_x
-                    bpy.data.brushes["Draw"].color.v += color_delta_y
+                    _db = bpy.data.brushes.get("Draw")
+                    if _db:
+                        if self.colormode == 'sat':
+                            _db.color.s += color_delta_x
+                        if self.colormode == 'hue':
+                            _db.color.h += color_delta_x
+                        _db.color.v += color_delta_y
                     bpy.ops.paint.vertex_color_set()
                     bpy.ops.object.mode_set(mode='OBJECT', toggle=False) 
 

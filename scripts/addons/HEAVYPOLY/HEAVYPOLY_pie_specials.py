@@ -12,6 +12,8 @@ bl_info = {
 
 import bpy
 import os
+import bmesh
+import random
 import mathutils
 import numpy as np
 
@@ -71,7 +73,7 @@ class HP_MT_pie_specials(Menu):
         row.operator("transform.edge_crease", text="SUBD Crease ").value=1
         row.operator("transform.edge_crease", text="SUBD Un Crease").value=-1
         col.operator("object.scv_ot_draw_operator", text="Keys Viewer")
-        col.operator("transform.vertex_random", text="Randomize")
+        col.operator("mesh.hp_randomize_vertices", text="Randomize")
         
         
 #TopRight
@@ -115,10 +117,88 @@ class HP_OT_subdivide_cylinder(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
 
     def execute(self, context):
-        bpy.ops.mesh.loop_multi_select(ring=False)
-        bpy.ops.mesh.loop_multi_select(ring=True)
+        bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.bevel(offset_type='PERCENT', offset_pct=25, affect='EDGES')
         return {'FINISHED'}
+
+class HP_OT_randomize_vertices(bpy.types.Operator):
+    bl_idname = "mesh.hp_randomize_vertices"
+    bl_label = "Randomize"
+    bl_description = "Drag mouse X to randomize selected vertex positions"
+    bl_options = {'REGISTER', 'UNDO', 'GRAB_CURSOR_X', 'BLOCKING'}
+
+    amount: bpy.props.FloatProperty(name="Amount", default=0.0)
+    seed: bpy.props.IntProperty(name="Seed", default=0)
+
+    def invoke(self, context, event):
+        obj = context.edit_object
+        if obj is None or obj.type != 'MESH':
+            return {'CANCELLED'}
+        bm = bmesh.from_edit_mesh(obj.data)
+        self._orig = {v.index: v.co.copy() for v in bm.verts if v.select}
+        if not self._orig:
+            self.report({'WARNING'}, "No vertices selected")
+            return {'CANCELLED'}
+        self.seed = random.randint(0, 9999)
+        self._start_x = event.mouse_x
+        self.amount = 0.0
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+
+    def _apply(self, context):
+        obj = context.edit_object
+        bm = bmesh.from_edit_mesh(obj.data)
+        rng = random.Random(self.seed)
+        for v in bm.verts:
+            if v.index in self._orig:
+                v.co = self._orig[v.index].copy()
+                if self.amount != 0.0:
+                    v.co += mathutils.Vector((
+                        rng.uniform(-1, 1),
+                        rng.uniform(-1, 1),
+                        rng.uniform(-1, 1),
+                    )) * self.amount
+        bmesh.update_edit_mesh(obj.data)
+        context.area.header_text_set(
+            f"Randomize: {self.amount:.4f}   |   Click confirm   Esc cancel")
+
+    def modal(self, context, event):
+        if event.type == 'MOUSEMOVE':
+            self.amount = (event.mouse_x - self._start_x) * 0.002
+            self._apply(context)
+
+        elif event.type in {'LEFTMOUSE', 'RET', 'NUMPAD_ENTER'} and event.value == 'PRESS':
+            context.area.header_text_set(None)
+            return {'FINISHED'}
+
+        elif event.type in {'RIGHTMOUSE', 'ESC'}:
+            obj = context.edit_object
+            bm = bmesh.from_edit_mesh(obj.data)
+            for v in bm.verts:
+                if v.index in self._orig:
+                    v.co = self._orig[v.index].copy()
+            bmesh.update_edit_mesh(obj.data)
+            context.area.header_text_set(None)
+            return {'CANCELLED'}
+
+        return {'RUNNING_MODAL'}
+
+    def execute(self, context):
+        obj = context.edit_object
+        if obj is None:
+            return {'CANCELLED'}
+        bm = bmesh.from_edit_mesh(obj.data)
+        rng = random.Random(self.seed)
+        for v in bm.verts:
+            if v.select and self.amount != 0.0:
+                v.co += mathutils.Vector((
+                    rng.uniform(-1, 1),
+                    rng.uniform(-1, 1),
+                    rng.uniform(-1, 1),
+                )) * self.amount
+        bmesh.update_edit_mesh(obj.data)
+        return {'FINISHED'}
+
 
 class HP_OT_set_origin_to_bottom(Operator):
     bl_idname = "object.origin_set_to_bottom"
@@ -446,6 +526,7 @@ class OBJECT_OT_create_lattice_for_selection(bpy.types.Operator):
 classes = (
     HP_MT_pie_specials,
     HP_OT_subdivide_cylinder,
+    HP_OT_randomize_vertices,
     HP_OT_set_origin_to_bottom,
     HP_OBJECT_OT_add_geo_nodes,
     HP_OBJECT_OT_add_Array_On_Curve,

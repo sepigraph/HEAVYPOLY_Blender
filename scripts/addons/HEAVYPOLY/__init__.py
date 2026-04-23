@@ -33,6 +33,7 @@ from . import HEAVYPOLY_popup_render
 from . import HEAVYPOLY_select_through_border
 from . import jmQuickPipe
 from . import HEAVYPOLY_pie_extra
+from . import HEAVYPOLY_pie_modifiers
 from . import HEAVYPOLY_startup
 
 
@@ -65,6 +66,7 @@ def register():
     HEAVYPOLY_select_through_border.register()
     jmQuickPipe.register()
     HEAVYPOLY_pie_extra.register()
+    HEAVYPOLY_pie_modifiers.register()
     HEAVYPOLY_startup.register()
 
     # Register keyboard shortcuts
@@ -104,6 +106,7 @@ def unregister():
     HEAVYPOLY_select_through_border.unregister()
     jmQuickPipe.unregister()
     HEAVYPOLY_pie_extra.unregister()
+    HEAVYPOLY_pie_modifiers.unregister()
     HEAVYPOLY_startup.unregister()
     #script2.unregister()
 

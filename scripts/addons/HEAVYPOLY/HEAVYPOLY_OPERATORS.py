@@ -633,6 +633,40 @@ class OBJECT_OT_select_camera_hidden(bpy.types.Operator):
 
 
 
+class HP_OT_RemoveAllCustomProperties(bpy.types.Operator):
+    bl_idname = "object.hp_remove_all_custom_properties"
+    bl_label = "Remove All Custom Properties"
+    bl_description = "Remove all custom properties from selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        total = 0
+        for obj in context.selected_objects:
+            keys = list(obj.keys())
+            for key in keys:
+                del obj[key]
+                total += 1
+        self.report({'INFO'}, f"Removed {total} custom property/properties")
+        return {'FINISHED'}
+
+
+class HP_OT_BackfaceCullMaterials(bpy.types.Operator):
+    bl_idname = "object.hp_backface_cull_materials"
+    bl_label = "Backface Culling — All Materials"
+    bl_description = "Enable backface culling on all materials of selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        total = 0
+        for obj in context.selected_objects:
+            for slot in obj.material_slots:
+                if slot.material:
+                    slot.material.use_backface_culling = True
+                    total += 1
+        self.report({'INFO'}, f"Enabled backface culling on {total} material(s)")
+        return {'FINISHED'}
+
+
 class HP_OT_CleanUnusedMaterialSlots(bpy.types.Operator):
     bl_idname = "object.hp_clean_unused_material_slots"
     bl_label = "Clean Unused Material Slots"
@@ -680,6 +714,9 @@ def draw_func(self, context):
     layout.separator()
     layout.operator("object.hp_clean_unused_material_slots", icon='MATERIAL')
     layout.operator("object.hp_remove_all_materials", icon='X')
+    layout.operator("object.hp_backface_cull_materials", icon='NORMALS_FACE')
+    layout.separator()
+    layout.operator("object.hp_remove_all_custom_properties", icon='REMOVE')
 
 
 classes = (
@@ -705,6 +742,8 @@ classes = (
     OBJECT_OT_set_camera_off_wire,
     OBJECT_OT_set_camera_on_textured,
     OBJECT_OT_select_camera_hidden,
+    HP_OT_RemoveAllCustomProperties,
+    HP_OT_BackfaceCullMaterials,
     HP_OT_CleanUnusedMaterialSlots,
     HP_OT_RemoveAllMaterials,
 

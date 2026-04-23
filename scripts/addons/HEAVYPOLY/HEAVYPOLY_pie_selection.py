@@ -139,7 +139,7 @@ class HP_MT_pie_select(Menu):
         col.separator()
 
 
-        match bpy.context.object.type:
+        match obj_type:
             case "MESH":
                 col.operator('object.mode_set', text = 'Sculpt', icon='SCULPTMODE_HLT').mode='SCULPT'
                 col.operator('object.mode_set', text = 'Vertex Paint', icon='VPAINT_HLT').mode='VERTEX_PAINT'
@@ -154,14 +154,8 @@ class HP_MT_pie_select(Menu):
                 col.operator('object.mode_set', text = 'Weight Paint', icon='WPAINT_HLT').mode='WEIGHT_GREASE_PENCIL'
             case "LATTICE":
                 col.operator('object.mode_set', text = 'Weight Paint', icon='WPAINT_HLT').mode='WEIGHT_PAINT'
-            case "ARMATURE":
+            case "ARMATURE" | "META" | None:
                 pass
-            case "META":
-                pass
-
-            # Particles Will be removed in later versions, keeping it on the bottom for organisation
-            case bpy.context.object.particle_systems:
-                col.operator('object.mode_set', text = 'Particle Edit', icon='PARTICLEMODE').mode='PARTICLE_EDIT'
 
             # New datatypes can easily be added above pass
             case _:
