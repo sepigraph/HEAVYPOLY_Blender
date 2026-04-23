@@ -51,7 +51,6 @@ class HP_MT_popup_render(bpy.types.Operator):
 
         col.label(text='WORLD')
         world = bpy.context.scene.world
-        col.prop(scene.eevee, "use_soft_shadows")
         if world.use_nodes:
             ntree = world.node_tree
             node = ntree.get_output_node('EEVEE')

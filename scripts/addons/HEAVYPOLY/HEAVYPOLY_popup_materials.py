@@ -119,10 +119,14 @@ class HP_MT_popup_materials(bpy.types.Operator):
             print('No Material Selected')
         col.label(text = 'VERTEX COLOR (for _V materials)')
         ts = context.tool_settings
-        ups = ts.unified_paint_settings
-        ptr = ups if ups.use_unified_color else ts.vertex_paint.brush
-        col.template_color_picker(ptr, 'color', value_slider=True)
-        col.prop(ptr, 'color', text='')
+        if hasattr(ts, 'unified_paint_settings'):
+            ups = ts.unified_paint_settings
+            ptr = ups if ups.use_unified_color else ts.vertex_paint.brush
+        else:
+            ptr = ts.vertex_paint.brush if (hasattr(ts, 'vertex_paint') and ts.vertex_paint and ts.vertex_paint.brush) else None
+        if ptr:
+            col.template_color_picker(ptr, 'color', value_slider=True)
+            col.prop(ptr, 'color', text='')
 
         if bpy.context.object.type == 'MESH':
             col.operator("mesh.material_apply", text='Apply Vertex Color')
