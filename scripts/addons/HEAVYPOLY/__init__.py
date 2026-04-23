@@ -13,7 +13,6 @@ from . import HEAVYPOLY__menu_master
 from . import HEAVYPOLY_draw_primitives
 from . import HEAVYPOLY_HOTKEYS
 from . import HEAVYPOLY_OPERATORS
-from . import HEAVYPOLY_panel_properties
 from . import HEAVYPOLY_panel_render
 from . import HEAVYPOLY_pie_add
 from . import HEAVYPOLY_pie_areas
@@ -28,7 +27,6 @@ from . import HEAVYPOLY_pie_specials
 from . import HEAVYPOLY_pie_symmetry
 from . import HEAVYPOLY_pie_view
 from . import HEAVYPOLY_popup_materials
-from . import HEAVYPOLY_popup_properties
 from . import HEAVYPOLY_popup_render
 from . import HEAVYPOLY_select_through_border
 from . import jmQuickPipe
@@ -46,7 +44,6 @@ def register():
     HEAVYPOLY_draw_primitives.register()
     HEAVYPOLY_HOTKEYS.register()
     HEAVYPOLY_OPERATORS.register()
-    HEAVYPOLY_panel_properties.register()
     HEAVYPOLY_panel_render.register()
     HEAVYPOLY_pie_add.register()
     HEAVYPOLY_pie_areas.register()
@@ -61,7 +58,6 @@ def register():
     HEAVYPOLY_pie_symmetry.register()
     HEAVYPOLY_pie_view.register()
     HEAVYPOLY_popup_materials.register()
-    HEAVYPOLY_popup_properties.register()
     HEAVYPOLY_popup_render.register()
     HEAVYPOLY_select_through_border.register()
     jmQuickPipe.register()
@@ -86,7 +82,6 @@ def unregister():
     HEAVYPOLY_draw_primitives.unregister()
     HEAVYPOLY_HOTKEYS.unregister()
     HEAVYPOLY_OPERATORS.unregister()
-    HEAVYPOLY_panel_properties.unregister()
     HEAVYPOLY_panel_render.unregister()
     HEAVYPOLY_pie_add.unregister()
     HEAVYPOLY_pie_areas.unregister()
@@ -101,7 +96,6 @@ def unregister():
     HEAVYPOLY_pie_symmetry.unregister()
     HEAVYPOLY_pie_view.unregister()
     HEAVYPOLY_popup_materials.unregister()
-    HEAVYPOLY_popup_properties.unregister()
     HEAVYPOLY_popup_render.unregister()
     HEAVYPOLY_select_through_border.unregister()
     jmQuickPipe.unregister()

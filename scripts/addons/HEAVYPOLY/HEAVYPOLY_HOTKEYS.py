@@ -43,7 +43,6 @@ def Keymap_Heavypoly():
         #kmi = km.keymap_items.new("view3d.hp_duplicate_move","D","PRESS", shift=True)
 #        kmi = km.keymap_items.new("wm.call_menu_pie","SPACE","PRESS", shift=True).properties.name='HP_MT_popup_uber'
 #        kmi = km.keymap_items.new("wm.call_menu_pie","Z","PRESS").properties.name='HP_MT_popup_uber'
-        kmi = km.keymap_items.new("popup.hp_properties", 'V',"PRESS", ctrl=True, shift=True)
         kmi = km.keymap_items.new("popup.hp_materials", 'V',"PRESS", shift=True)
     # kmi = km.keymap_items.new('gpencil.blank_frame_add', 'B', 'PRESS', key_modifier='FOUR')
 # "ACCENT_GRAVE"

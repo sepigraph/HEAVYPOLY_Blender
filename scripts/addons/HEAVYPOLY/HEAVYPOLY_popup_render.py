@@ -65,7 +65,6 @@ class HP_MT_popup_render(bpy.types.Operator):
                 if input:
                     col.separator()
                     col.separator()
-                    col.prop(scene.eevee, "use_volumetric", text="Use Volumetric")
                     col.template_node_view(ntree, node, inputvol)
                 else:
                     col.label(text="Incompatible output node")
@@ -109,7 +108,7 @@ class HP_MT_popup_render(bpy.types.Operator):
             row.prop(image_settings, "color_mode", expand = True)
             row = col.row()
             row.scale_x=.2
-            row.prop(image_settings, "col_depth", expand = True)
+            row.prop(image_settings, "color_depth", expand = True)
         col2.prop(rd, "filepath", text="")
         col2.prop(rd, "use_overwrite")
 #       col.prop(rd, "use_placeholder")

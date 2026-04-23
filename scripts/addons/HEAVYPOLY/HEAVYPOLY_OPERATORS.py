@@ -681,7 +681,8 @@ class HP_OT_CleanUnusedMaterialSlots(bpy.types.Operator):
                 continue
             context.view_layer.objects.active = obj
             before = len(obj.material_slots)
-            bpy.ops.object.material_slot_remove_unused()
+            with context.temp_override(active_object=obj, object=obj):
+                bpy.ops.object.material_slot_remove_unused()
             total += before - len(obj.material_slots)
         context.view_layer.objects.active = prev_active
         self.report({'INFO'}, f"Removed {total} unused material slot(s)")
