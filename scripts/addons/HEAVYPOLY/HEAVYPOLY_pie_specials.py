@@ -72,7 +72,6 @@ class HP_MT_pie_specials(Menu):
         row = col.row(align=True)
         row.operator("transform.edge_crease", text="SUBD Crease ").value=1
         row.operator("transform.edge_crease", text="SUBD Un Crease").value=-1
-        col.operator("object.scv_ot_draw_operator", text="Keys Viewer")
         col.operator("mesh.hp_randomize_vertices", text="Randomize")
         
         
@@ -199,71 +198,6 @@ class HP_OT_randomize_vertices(bpy.types.Operator):
         bmesh.update_edit_mesh(obj.data)
         return {'FINISHED'}
 
-
-class HP_OT_set_origin_to_bottom(Operator):
-    bl_idname = "object.origin_set_to_bottom"
-    bl_label = "Origin To Bottom"
-    bl_description = "Set the Object Origin to the lowest point of each selected object"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        if not any(
-            [ob.type in {'MESH', 'ARMATURE'} for ob in context.selected_objects]
-        ):
-            cls.poll_message_set("No mesh or armature objects selected.")
-            return False
-        return True
-
-    def execute(self, context):
-        org_active_obj = context.active_object
-
-        counter = 0
-        for obj in context.selected_objects:
-            counter += int(self.origin_to_bottom(context, obj))
-
-        context.view_layer.objects.active = org_active_obj
-        self.report(
-            {'INFO'}, f"Moved the origins of {counter} objects to their lowest point."
-        )
-
-        return {'FINISHED'}
-
-    @staticmethod
-    def origin_to_bottom(context, obj) -> bool:
-        if obj.type not in {'MESH', 'ARMATURE'}:
-            return False
-
-        org_mode = obj.mode
-
-        try:
-            if obj.type == 'MESH':
-                bpy.ops.object.mode_set(mode='OBJECT')
-                min_z = min([v.co.z for v in obj.data.vertices])
-            elif obj.type == 'ARMATURE':
-                context.view_layer.objects.active = obj
-                bpy.ops.object.mode_set(mode='EDIT')
-                min_z = min(
-                    [min([bone.head.z, bone.tail.z]) for bone in obj.data.edit_bones]
-                )
-            else:
-                return False
-        except ValueError:
-            # min([]) would result in this error, so if the object is empty.
-            return False
-
-        if obj.type == 'MESH':
-            for vert in obj.data.vertices:
-                vert.co.z -= min_z
-        elif obj.type == 'ARMATURE':
-            for bone in obj.data.edit_bones:
-                bone.head.z -= min_z
-                bone.tail.z -= min_z
-
-        obj.location.z += min_z
-
-        bpy.ops.object.mode_set(mode=org_mode)
-        return True
 
 ###################################################################################
 # ADD NODEGROUP TO THE MODIFIER
@@ -527,7 +461,6 @@ classes = (
     HP_MT_pie_specials,
     HP_OT_subdivide_cylinder,
     HP_OT_randomize_vertices,
-    HP_OT_set_origin_to_bottom,
     HP_OBJECT_OT_add_geo_nodes,
     HP_OBJECT_OT_add_Array_On_Curve,
     OBJECT_OT_create_lattice_for_selection,

@@ -64,7 +64,7 @@ class HP_MT_pie_areas(Menu):
 		col = split.column(align=True)
 		row = col.row(align=True)
 		row.scale_y=1.5
-		prop = row.operator("wm.context_set_enum", text="IIMMG Editor")
+		prop = row.operator("wm.context_set_enum", text="Image Editor")
 		prop.data_path = "area.type"
 		prop.value = 'IMAGE_EDITOR'
 		prop = row.operator("wm.context_set_enum", text="UV Editor")

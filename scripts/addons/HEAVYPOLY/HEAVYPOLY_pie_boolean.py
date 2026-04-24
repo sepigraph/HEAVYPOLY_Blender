@@ -383,6 +383,7 @@ class HP_OT_boolean_apply(bpy.types.Operator):
             view_layer = bpy.context.view_layer
             view_layer_cutters = [obj for obj in view_layer.objects if "_Cutter" in obj.name]
             base_cutters = []
+            iscutter = False
             for ob in sel:
                 if "_Cutter" in ob.name:
                     iscutter = True

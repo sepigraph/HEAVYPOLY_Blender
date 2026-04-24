@@ -140,7 +140,7 @@ class HP_OT_mirror_toggle(bpy.types.Operator):
     bl_label = ""
     bl_options = {'REGISTER', 'UNDO'}
     type: bpy.props.StringProperty(name='Type',default='Mirror Base') 
-    def execute(self, event):
+    def execute(self, context):
         def create_mirror(self, type):
             obmode = bpy.context.object.mode
             selobs = bpy.context.selected_objects

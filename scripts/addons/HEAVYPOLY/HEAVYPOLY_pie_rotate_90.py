@@ -10,7 +10,7 @@ bl_info = {
 	"category": "Pie Menu"
 	}
 
-import bpy, bmesh
+import bpy, bmesh, math
 from bpy.types import (
 		Menu,
 		Operator,
@@ -42,7 +42,7 @@ class HP_MT_pie_rotate90(Menu):
 
 class HP_OT_rotate_90_and_flatten(bpy.types.Operator):
 	bl_idname = "view3d.rotate_90_and_flatten"
-	bl_label = ""
+	bl_label = "Rotate 90 / Flatten"
 	bl_options = {'REGISTER', 'UNDO'}
 	direction: bpy.props.StringProperty(name="Direction")
 
@@ -73,14 +73,14 @@ class HP_OT_rotate_90_and_flatten(bpy.types.Operator):
 					print('Object Mode')
 #Rotate 90
 		if self.direction == 'RZ':
-			bpy.ops.transform.rotate(value=1.5708, orient_axis='Z', orient_type='GLOBAL', orient_matrix_type='GLOBAL', constraint_axis=(False, False, True))
+			bpy.ops.transform.rotate(value=math.pi / 2, orient_axis='Z', orient_type='GLOBAL', orient_matrix_type='GLOBAL', constraint_axis=(False, False, True))
 		if self.direction == 'RY':
-			bpy.ops.transform.rotate(value=1.5708, orient_axis='Y', orient_type='GLOBAL', orient_matrix_type='GLOBAL', constraint_axis=(False, True, False))
+			bpy.ops.transform.rotate(value=math.pi / 2, orient_axis='Y', orient_type='GLOBAL', orient_matrix_type='GLOBAL', constraint_axis=(False, True, False))
 		if self.direction == 'RX':
-			bpy.ops.transform.rotate(value=1.5708, orient_axis='X', orient_type='GLOBAL', orient_matrix_type='GLOBAL', constraint_axis=(True, False, False))
+			bpy.ops.transform.rotate(value=math.pi / 2, orient_axis='X', orient_type='GLOBAL', orient_matrix_type='GLOBAL', constraint_axis=(True, False, False))
 
 
-#bpy.ops.transform.rotate(value=1.5708, orient_axis='Z',  orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True))
+#bpy.ops.transform.rotate(value=math.pi / 2, orient_axis='Z',  orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', constraint_axis=(False, False, True))
 
 
 #Flattens

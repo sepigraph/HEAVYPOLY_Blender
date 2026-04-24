@@ -72,7 +72,7 @@ class HP_PT_render(bpy.types.Panel):
     def poll(cls, context):
         addon = context.preferences.addons.get(__package__)
         if addon is None:
-            return True
+            return False
         return addon.preferences.hp_render_panel
 
     def draw(self, context):

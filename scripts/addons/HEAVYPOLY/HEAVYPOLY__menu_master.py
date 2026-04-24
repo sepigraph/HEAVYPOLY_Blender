@@ -92,8 +92,11 @@ class HP_MT_popup_uber(bpy.types.Menu):
             row.prop(camdat, "clip_start", text="Clip Start")
             row.prop(camdat, "clip_end", text="Clip End")
         # if bpy.context.space_data.region_3d.view_perspective == 'CAMERA':
-            # cam_props(bpy.context.scene.camera)  
+            # cam_props(bpy.context.scene.camera)
 
+        ob = context.object
+        if ob is None:
+            return
         if ob.type == 'CAMERA':
             col.prop(ob, 'name', text = '')
             col.separator()
