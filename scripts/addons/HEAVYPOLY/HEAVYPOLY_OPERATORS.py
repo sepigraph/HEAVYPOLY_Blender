@@ -679,6 +679,8 @@ class HP_OT_CleanUnusedMaterialSlots(bpy.types.Operator):
         for obj in context.selected_objects:
             if obj.type not in {'MESH', 'CURVE', 'SURFACE', 'META', 'FONT'}:
                 continue
+            if not obj.material_slots:
+                continue
             context.view_layer.objects.active = obj
             before = len(obj.material_slots)
             with context.temp_override(active_object=obj, object=obj):
