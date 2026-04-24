@@ -1,6 +1,5 @@
 import bpy
-import random
-from bpy.props import *
+from bpy.props import IntProperty, StringProperty
 from bpy_extras.node_utils import find_node_input
 
 _RESOLUTION_PRESETS = [
@@ -77,25 +76,24 @@ class HP_PT_render(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        row = layout.row()
-        col = row.column()
-        col2 = row.column()
-        layout.use_property_split = True
-#FIRST COLUMN##############################################################
-
         scene = context.scene
         rd = scene.render
         props = scene.eevee
         image_settings = rd.image_settings
-        col.label(text='RENDER CAMERA')
-        col.prop(scene, "camera", text = '')
-        row = col.row()
-        row.scale_x=.5
+
+        # ── Camera ───────────────────────────────────────────────────────────
+        layout.label(text="Camera", icon='CAMERA_DATA')
+        layout.prop(scene, "camera", text='')
+
+        layout.separator()
+
+        # ── Resolution ───────────────────────────────────────────────────────
+        layout.label(text="Resolution", icon='RENDER_RESULT')
+        col = layout.column(align=True)
+        row = col.row(align=True)
         row.prop(rd, "resolution_x", text="X")
         row.prop(rd, "resolution_y", text="Y")
         row.prop(rd, "resolution_percentage", text="%")
-
-        # Resolution presets — 4 columns, 2 rows (video 16:9 then square)
         grid = col.grid_flow(row_major=True, columns=4, align=True)
         for label, x, y in _RESOLUTION_PRESETS:
             op = grid.operator("render.hp_set_resolution", text=label)
@@ -103,92 +101,78 @@ class HP_PT_render(bpy.types.Panel):
             op.y = y
             op.pct = 100
 
-        row = col.row()
-        row.prop(scene, "frame_start", text="F Start")
-        row.prop(rd, "fps", text = 'F Rate')
-        row = col.row()
-        row.prop(scene, "frame_end", text="F End")
-        row.prop(scene, "frame_step", text="F Step")
-        col.separator()
-        row = col.row()
+        layout.separator()
 
-#           col.prop(world, "use_nodes", icon='NODETREE')
+        # ── Frame Range ───────────────────────────────────────────────────────
+        layout.label(text="Frame Range", icon='TIME')
+        col = layout.column(align=True)
+        row = col.row(align=True)
+        row.prop(scene, "frame_start", text="Start")
+        row.prop(scene, "frame_end", text="End")
+        row = col.row(align=True)
+        row.prop(rd, "fps", text="FPS")
+        row.prop(scene, "frame_step", text="Step")
 
-        col.label(text='WORLD')
-        world = bpy.context.scene.world
+        layout.separator()
 
-        # worldnodes = world.node_tree.nodes
-        # actnode = worldnodes.active
-        # col.prop(actnode, 'type', text='')
-        # for node in worldnodes:
-            # for input in node.inputs:
-                # col.prop(input, 'default_value', text = input.name)
-        # # for x in actnode.inputs:
-            # # if x.name != 'Normal' and x.name != 'Clearcoat Normal' and x.name != 'Tangent':
-                # # col2.prop(x,'default_value', text = x.name
-
+        # ── World ─────────────────────────────────────────────────────────────
+        layout.label(text="World", icon='WORLD')
+        world = scene.world
         if world.use_nodes:
             ntree = world.node_tree
             node = ntree.get_output_node('EEVEE')
-
             if node:
-                input = find_node_input(node, 'Surface')
-                inputvol = find_node_input(node, 'Volume')
-                if input:
-                    col.template_node_view(ntree, node, input)
-                if input:
-                    col.separator()
-                    col.separator()
-                    # col.prop(scene.eevee, "use_volumetric", text="Use Volumetric")
-                    col.template_node_view(ntree, node, inputvol)
+                input_surf = find_node_input(node, 'Surface')
+                input_vol  = find_node_input(node, 'Volume')
+                if input_surf:
+                    layout.template_node_view(ntree, node, input_surf)
+                    layout.separator()
+                    layout.template_node_view(ntree, node, input_vol)
                 else:
-                    col.label(text="Incompatible output node")
+                    layout.label(text="Incompatible output node")
             else:
-                col.label(text="No output node")
+                layout.label(text="No output node")
         else:
-            col.prop(world, "color")
-        scene = bpy.context.scene
-        props = scene.eevee
-        # col.label(text='BLOOM')
-        # box = col.box().column()
-        # box.active = props.use_bloom
-        # box.prop(props, "bloom_threshold")
-        # box.prop(props, "bloom_knee")
-        # box.prop(props, "bloom_radius")
-        # box.prop(props, "bloom_color")
-        # box.prop(props, "bloom_intensity")
-        # box.prop(props, "bloom_clamp")
-#SECOND COLUMN##############################################################
+            layout.prop(world, "color")
 
+        layout.separator()
 
+        # ── Color Management ─────────────────────────────────────────────────
+        layout.label(text="Color Management", icon='COLOR')
+        col = layout.column(align=True)
+        col.prop(scene.view_settings, 'view_transform', text='')
+        col.prop(scene.view_settings, 'look', text='')
+        layout.template_curve_mapping(
+            scene.view_settings, "curve_mapping", type='COLOR', levels=True)
 
+        layout.separator()
 
-
-        col2.label(text='RENDER SETTINGS')
-        col2.prop(scene.view_settings, 'view_transform', text='')
-        col2.prop(scene.view_settings, 'look', text='')
-        col2.template_curve_mapping(scene.view_settings, "curve_mapping", type='COLOR', levels=True)
-        col2.prop(image_settings, "file_format", text = '')
-
-        # Output presets
-        row = col2.row(align=True)
+        # ── Output ────────────────────────────────────────────────────────────
+        layout.label(text="Output", icon='OUTPUT')
+        col = layout.column(align=True)
+        col.prop(image_settings, "file_format", text='')
+        row = col.row(align=True)
         for label, preset in _OUTPUT_PRESETS:
             row.operator("render.hp_set_output_preset", text=label).preset = preset
 
-        row = col2.row()
-        row.prop(image_settings, "compression")
-        row.prop(rd, "use_overwrite")
-        row = col2.row()
-        row.scale_x=.2
-        row.prop(image_settings, "color_mode", expand=True)
-        row = col2.row()
-        row.scale_x=.2
-        row.prop(image_settings, "color_depth", expand=True)
-        col2.prop(rd, "filepath", text="")
+        col.separator(factor=0.5)
+        col.prop(image_settings, "color_mode", text="Color")
+        col.prop(image_settings, "color_depth", text="Depth")
+
+        col.separator(factor=0.5)
+        row = col.row(align=True)
+        row.prop(image_settings, "compression", text="Compression")
+        row.prop(rd, "use_overwrite", text="Overwrite")
+        col.prop(rd, "filepath", text="")
+
         if hasattr(props, "taa_samples"):
-            row = col2.row()
-            row.prop(props, "taa_samples")
-            row.prop(props, "taa_render_samples")
+            layout.separator()
+            layout.label(text="Sampling", icon='ANTIALIASED')
+            col = layout.column(align=True)
+            row = col.row(align=True)
+            row.prop(props, "taa_samples", text="Viewport")
+            row.prop(props, "taa_render_samples", text="Render")
+
 
 classes = (
     HP_OT_set_resolution,
