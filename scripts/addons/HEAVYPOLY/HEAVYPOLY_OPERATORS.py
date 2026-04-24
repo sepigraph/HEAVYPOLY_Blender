@@ -723,11 +723,8 @@ class HP_OT_IsolateMeshSelection(bpy.types.Operator):
     def execute(self, context):
         bm = bmesh.from_edit_mesh(context.object.data)
         has_hidden = any(v.hide for v in bm.verts)
-        in_local_view = context.space_data.local_view is not None
-        if has_hidden or in_local_view:
+        if has_hidden:
             bpy.ops.mesh.reveal(select=False)
-            if in_local_view:
-                bpy.ops.view3d.localview()
         else:
             bpy.ops.mesh.hide(unselected=True)
         return {'FINISHED'}
