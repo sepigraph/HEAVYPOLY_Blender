@@ -708,6 +708,28 @@ class HP_OT_RemoveAllMaterials(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class HP_OT_IsolateMeshSelection(bpy.types.Operator):
+    bl_idname = "mesh.hp_isolate_selection"
+    bl_label = "Isolate Selection"
+    bl_description = "Hide unselected geometry; if already isolated, reveal all"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return (context.object is not None
+                and context.object.type == 'MESH'
+                and context.object.mode == 'EDIT')
+
+    def execute(self, context):
+        bm = bmesh.from_edit_mesh(context.object.data)
+        has_hidden = any(v.hide for v in bm.verts)
+        if has_hidden:
+            bpy.ops.mesh.reveal(select=False)
+        else:
+            bpy.ops.mesh.hide(unselected=True)
+        return {'FINISHED'}
+
+
 def draw_func(self, context):
     layout = self.layout
     layout.separator()
@@ -720,6 +742,12 @@ def draw_func(self, context):
     layout.operator("object.hp_backface_cull_materials", icon='NORMALS_FACE')
     layout.separator()
     layout.operator("object.hp_remove_all_custom_properties", icon='REMOVE')
+
+
+def draw_func_mesh_edit(self, context):
+    layout = self.layout
+    layout.separator()
+    layout.operator("mesh.hp_isolate_selection", icon='HIDE_OFF')
 
 
 classes = (
@@ -749,6 +777,7 @@ classes = (
     HP_OT_BackfaceCullMaterials,
     HP_OT_CleanUnusedMaterialSlots,
     HP_OT_RemoveAllMaterials,
+    HP_OT_IsolateMeshSelection,
 
 )
 #register, unregister = bpy.utils.register_classes_factory(classes)
@@ -756,6 +785,8 @@ classes = (
 def _append_draw_func():
     if hasattr(bpy.types, 'VIEW3D_MT_object_context_menu'):
         bpy.types.VIEW3D_MT_object_context_menu.append(draw_func)
+    if hasattr(bpy.types, 'VIEW3D_MT_edit_mesh_context_menu'):
+        bpy.types.VIEW3D_MT_edit_mesh_context_menu.append(draw_func_mesh_edit)
 
 def register():
     for cls in classes:
@@ -767,6 +798,8 @@ def unregister():
         bpy.utils.unregister_class(cls)
     if hasattr(bpy.types, 'VIEW3D_MT_object_context_menu'):
         bpy.types.VIEW3D_MT_object_context_menu.remove(draw_func)
+    if hasattr(bpy.types, 'VIEW3D_MT_edit_mesh_context_menu'):
+        bpy.types.VIEW3D_MT_edit_mesh_context_menu.remove(draw_func_mesh_edit)
 
 if __name__ == "__main__":
     register()
