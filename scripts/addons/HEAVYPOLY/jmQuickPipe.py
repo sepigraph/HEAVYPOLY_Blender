@@ -3,7 +3,7 @@ from bpy.props import IntProperty, FloatProperty
 
 bl_info = {
     "name": "Quick Pipe",
-    "author": "floatvoid (Jeremy Mitchell)", "Vaughan Ling (2.8 conversion)"
+    "author": "floatvoid (Jeremy Mitchell), Vaughan Ling (2.8 conversion)",
     "version": (1, 0),
     "blender": (2, 80, 0),
     "location": "View3D > Edit Mode",

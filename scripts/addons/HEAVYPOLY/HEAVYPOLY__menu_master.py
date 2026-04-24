@@ -77,20 +77,20 @@ class HP_MT_popup_uber(bpy.types.Menu):
             
 
 
-            col2.prop(rd, "resolution_x", text="Res X")
-            col2.prop(rd, "resolution_y", text="Res Y")
-            col2.prop(rd, "resolution_percentage", text="Res %")
-            #col2.prop(scene, "frame_current", text="Current Frame")
-            row = col2.row(align = True)
+            col.prop(rd, "resolution_x", text="Res X")
+            col.prop(rd, "resolution_y", text="Res Y")
+            col.prop(rd, "resolution_percentage", text="Res %")
+            #col.prop(scene, "frame_current", text="Current Frame")
+            row = col.row(align = True)
             row.prop(scene, "frame_start", text="F Start")
             row.prop(scene, "frame_end", text="F End")
-            row = col2.row(align = True)
+            row = col.row(align = True)
             row.prop(scene, "frame_step", text="Step")
             row.prop(rd, "fps", text = 'FPS')
-            
-            row = col2.row(align = True)
-            row.prop(actdat, "clip_start", text="Clip Start")
-            row.prop(actdat, "clip_end", text="Clip End")
+
+            row = col.row(align = True)
+            row.prop(camdat, "clip_start", text="Clip Start")
+            row.prop(camdat, "clip_end", text="Clip End")
         # if bpy.context.space_data.region_3d.view_perspective == 'CAMERA':
             # cam_props(bpy.context.scene.camera)  
 

@@ -216,9 +216,9 @@ class HP_OT_SelectModeSmart(bpy.types.Operator):
             case "EDIT_MESH":
                 select(self.selectmode)
             case "GPENCIL_PAINT":
-                bpy.context.mode = "OBJECT"
+                bpy.ops.object.mode_set(mode='OBJECT')
             case "PAINT_GREASE_PENCIL":
-                bpy.context.mode = "OBJECT"
+                bpy.ops.object.mode_set(mode='OBJECT')
             case _:
                 bpy.ops.object.mode_set(mode="EDIT")
         return {'FINISHED'}
