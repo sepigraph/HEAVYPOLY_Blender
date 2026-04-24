@@ -355,6 +355,16 @@ def register():
 
 
     disable_default_kmi('Object Mode', 'object.delete')
+    # Shift+X → object.delete (use_global) conflicts with the symmetry pie
+    disable_specific_kmi('Object Mode', 'object.delete', 'X', 'PRESS', True, False, False)
+
+    # Shift+X in Mesh edit mode also maps to the delete menu by default
+    disable_active_kmi("Mesh",
+                        idname="wm.call_menu",
+                        type='X',
+                        shift=True,
+                        ctrl=False,
+                        alt=False)
 
     disable_default_kmi('Window', 'screen.animation_play')
 
