@@ -165,17 +165,28 @@ class HP_OT_create_camera_at_view(bpy.types.Operator):
 				print('Creating Cameras Collection')
 				col = bpy.data.collections.new("Cameras")
 				bpy.context.scene.collection.children.link(col)
-			try:
-				bpy.context.scene.collection.objects.unlink(active_cam)
-			except:
-				for c in bpy.data.collections:
-					try:
-						c.objects.unlink(active_cam)
-					except:
-						pass
+
+			def find_layer_collection(layer_coll, name):
+				if layer_coll.collection.name == name:
+					return layer_coll
+				for child in layer_coll.children:
+					result = find_layer_collection(child, name)
+					if result:
+						return result
+				return None
+
+			cameras_lc = find_layer_collection(bpy.context.view_layer.layer_collection, 'Cameras')
+			if cameras_lc and cameras_lc.exclude:
+				cameras_lc.exclude = False
+
+			for c in active_cam.users_collection:
+				c.objects.unlink(active_cam)
 			bpy.data.collections['Cameras'].objects.link(active_cam)
-			active_cam.select_set(state=True)
 			bpy.context.view_layer.objects.active = active_cam
+			try:
+				active_cam.select_set(state=True)
+			except RuntimeError:
+				pass
 		if bpy.context.area.spaces.active.region_3d.view_perspective == 'CAMERA':
 			print('Switching to Right View')
 			bpy.ops.view3d.view_axis(type='RIGHT')
