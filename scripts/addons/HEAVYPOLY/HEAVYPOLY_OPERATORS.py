@@ -275,44 +275,32 @@ class HP_OT_SmartScale(Operator):
         else:
             return {'RUNNING_MODAL'}
 class HP_OT_SmartBevel(bpy.types.Operator):
-    bl_idname = "view3d.smart_bevel"        # unique identifier for buttons and menu items to reference.
-    bl_label = "Smart Bevel"         # display name in the interface.
-    bl_options = {'REGISTER', 'UNDO'}  # enable undo for the operator.
+    bl_idname = "view3d.smart_bevel"
+    bl_label = "Smart Bevel"
+    bl_options = {'REGISTER', 'UNDO'}
 
     def invoke(self, context, event):
-        if context.active_object.mode == 'OBJECT':
-            print('Only works in Edit Mode')
-            #bpy.ops.view3d.hp_draw('INVOKE_DEFAULT')
-        else:
-            me = bpy.context.object.data
-            bm = bmesh.from_edit_mesh(me)
-            sel = []
-            for v in bm.verts:
-                if v.select:
-                    sel.append(v)
-            if len(sel) == 0:
-                print('Nothing Selected')
-                # bpy.ops.view3d.hp_draw('INVOKE_DEFAULT')
-            else:
-                if tuple(bpy.context.scene.tool_settings.mesh_select_mode) == (True, False, False):
-                    bpy.ops.mesh.bevel('INVOKE_DEFAULT',clamp_overlap=True,affect='VERTICES')
-                    return {'FINISHED'}
-                elif tuple(bpy.context.scene.tool_settings.mesh_select_mode) == (False, False, True):
-                    bpy.ops.mesh.select_mode(type = 'EDGE')
-                    print('edge mode...')
-                    bpy.ops.mesh.region_to_loop('INVOKE_DEFAULT')
-                    print('selecting border...')
-                    me = bpy.context.object.data
-                    bm = bmesh.from_edit_mesh(me)
-                    sel = []
-                    for v in bm.verts:
-                        if v.select:
-                            sel.append(v)
-                    if len(sel) == 0:
-                        bpy.ops.mesh.select_all(action='SELECT')
-                bpy.ops.mesh.bevel('INVOKE_DEFAULT', clamp_overlap=True, miter_outer='ARC')
-            bpy.ops.mesh.merge_by_distance()
+        ob = context.active_object
+        if ob is None or ob.mode != 'EDIT' or ob.type != 'MESH':
+            return {'CANCELLED'}
 
+        me = ob.data
+        if me.total_vert_sel == 0:
+            return {'CANCELLED'}
+
+        select_mode = tuple(context.scene.tool_settings.mesh_select_mode)
+
+        if select_mode == (True, False, False):
+            bpy.ops.mesh.bevel('INVOKE_DEFAULT', clamp_overlap=True, affect='VERTICES')
+            return {'FINISHED'}
+
+        if select_mode == (False, False, True):
+            bpy.ops.mesh.select_mode(type='EDGE')
+            bpy.ops.mesh.region_to_loop()
+            if me.total_vert_sel == 0:
+                bpy.ops.mesh.select_all(action='SELECT')
+
+        bpy.ops.mesh.bevel('INVOKE_DEFAULT', clamp_overlap=True, miter_outer='ARC')
         return {'FINISHED'}
 
 
